@@ -1,30 +1,37 @@
-const recipesContainer = document.getElementById('recipes-container');
-
-fetch('https://.dummyjson.com/recipes')
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to fetch recipes');
-        }
-        return response.json();
-    })
-    .then(data => {
-        data.forEach(recipe => {
-            const recipeElement = document.createElement('div');
-            recipeElement.classList.add('recipe');
-            recipeElement.innerHTML = `
-                <h2>${recipe.title}</h2>
-                <p>${recipe.description}</p>
-                <ul>
-                    ${recipe.ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}
-                </ul>
-                <p>Instructions: ${recipe.instructions}</p>
-            `;
-            recipesContainer.appendChild(recipeElement);
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('https://dummyjson.com/recipes')
+    .then(res => res.json())
+    .then(json => {
+        const container = document.getElementById('json-container');
+        json.recipes.slice(0,12).forEach(recipe => {
+            const card = createCard(recipe);
+            container.appendChild(card);
         });
     })
     .catch(error => {
-        const errorMessage = document.createElement('p');
-        errorMessage.textContent = error.message;
-        errorMessage.style.color = '#ff0000';
-        recipesContainer.appendChild(errorMessage);
+        console.error('Error fetching JSON data:', error);
     });
+
+    function createCard(recipe) {
+        const card = document.createElement('div');
+        card.classList.add('card');
+
+        const image = document.createElement('img');
+        image.src = recipe.image;
+        card.appendChild(image);
+
+        const name = document.createElement('h2');
+        name.textContent = recipe.name;
+        card.appendChild(name);
+
+        const ingredients = document.createElement('p');
+        ingredients.innerHTML = `<h5>Ingredients:</h5> ${recipe.ingredients}`;
+        card.appendChild(ingredients);
+        
+        const instructions = document.createElement('p');
+        instructions.innerHTML = `<h5>Instructions:</h5> ${recipe.instructions}`;
+        card.appendChild(instructions);
+
+        return card;
+    }
+});
