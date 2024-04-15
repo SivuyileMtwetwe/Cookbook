@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipe App</title>
+  <style>
+    #filters {
+  margin-bottom: 20px;
+}
+
+#filters label {
+  margin-right: 10px;
+}
+
+#filters select,
+#filters input[type="number"],
+#filters input[type="text"] {
+  margin-right: 10px;
+  padding: 5px;
+}
+
+/* Styles for recipe cards */
+.recipe-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.recipe {
+  width: calc(25% - 20px); /* Adjust the width as needed */
+  margin: 10px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  background-color: #f9f9f9; /* Light gray background */
+  border-radius: 5px;
+}
+
+.recipe img {
+  max-width: 100%;
+  margin-bottom: 10px;
+}
+
+.recipe h2 {
+  margin-top: 0;
+}
+
+.recipe p {
+  margin-bottom: 5px;
+}
+
+/* Styles for feedback section */
+#feedback {
+  margin-top: 20px;
+}
+
+#feedback textarea {
+  width: 100%;
+  height: 100px;
+  margin-bottom: 10px;
+  padding: 5px;
+  resize: vertical; /* Allow vertical resizing */
+}
+
+#feedback #submitFeedback {
+  padding: 10px 20px;
+  background-color: #4caf50; /* Green */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#feedback #submitFeedback:hover {
+  background-color: #45a049; /* Darker green on hover */
+}
+
+  </style>
+</head>
+<body>
+  <div id="filters">
+    <label for="mealType">Meal Type:</label>
+    <select id="mealType">
+      <option value="">All</option>
+      <option value="Breakfast">Breakfast</option>
+      <option value="Lunch">Lunch</option>
+      <option value="Dinner">Dinner</option>
+      <option value="Dessert">Dessert</option>
+    </select>
+
+    <label for="rating">Rating:</label>
+    <select id="rating">
+      <option value="">All</option>
+      <option value="1">1 Star</option>
+      <option value="2">2 Stars</option>
+      <option value="3">3 Stars</option>
+      <option value="4">4 Stars</option>
+      <option value="5">5 Stars</option>
+    </select>
+
+    <label for="prepTime">Prep Time (min):</label>
+    <input type="number" id="prepTime" min="0">
+
+    <label for="cookTime">Cook Time (min):</label>
+    <input type="number" id="cookTime" min="0">
+
+    <label for="servingSize">Serving Size:</label>
+    <input type="number" id="servingSize" min="1">
+
+    <label for="cuisine">Cuisine:</label>
+    <input type="text" id="cuisine">
+
+    <label for="difficulty">Difficulty:</label>
+    <select id="difficulty">
+      <option value="">All</option>
+      <option value="Easy">Easy</option>
+      <option value="Medium">Medium</option>
+      <option value="Hard">Hard</option>
+    </select>
+  </div>
+
+  <div id="recipes" class="recipe-container"></div>
+
+  <div id="feedback">
+    <h2>Feedback</h2>
+    <textarea id="feedbackText" placeholder="Enter your feedback here"></textarea>
+    <button id="submitFeedback">Submit Feedback</button>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+  fetchRecipes();
+});
+
+function fetchRecipes() {
+    fetch("mod.json")
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("Failed to fetch recipes");
+    }
+    return response.json();
+  })
+  .then(data => {
+    displayRecipes(data);
+  })
+  .catch(error => {
+    console.error("Error fetching recipes:", error);
+    alert("Failed to fetch recipes. Please try again later.");
+  });
+}
+
+function displayRecipes(recipes) {
+  const recipesContainer = document.getElementById("recipes");
+  recipesContainer.innerHTML = "";
+  
+  const mealTypeFilter = document.getElementById("mealType").value;
+  const ratingFilter = document.getElementById("rating").value;
+  const prepTimeFilter = parseInt(document.getElementById("prepTime").value);
+  const cookTimeFilter = parseInt(document.getElementById("cookTime").value);
+  const servingSizeFilter = parseInt(document.getElementById("servingSize").value);
+  const cuisineFilter = document.getElementById("cuisine").value.toLowerCase();
+  const difficultyFilter = document.getElementById("difficulty").value;
+
+  recipes.forEach(recipe => {
+    if ((mealTypeFilter === "" || recipe.meal_type === mealTypeFilter) &&
+        (ratingFilter === "" || recipe.rating === parseInt(ratingFilter)) &&
+        (isNaN(prepTimeFilter) || recipe.prep_time <= prepTimeFilter) &&
+        (isNaN(cookTimeFilter) || recipe.cook_time <= cookTimeFilter) &&
+        (isNaN(servingSizeFilter) || recipe.serving_size === servingSizeFilter) &&
+        (cuisineFilter === "" || recipe.cuisine.toLowerCase().includes(cuisineFilter)) &&
+        (difficultyFilter === "" || recipe.difficulty === difficultyFilter)) {
+      const recipeDiv = document.createElement("div");
+      recipeDiv.classList.add("recipe");
+      recipeDiv.innerHTML = `
+        <h2>${recipe.name}</h2>
+        <img src="${recipe.image_url}" alt="${recipe.name}">
+        <p><strong>Meal Type:</strong> ${recipe.meal_type}</p>
+        <p><strong>Rating:</strong> ${recipe.rating} Stars</p>
+        <p><strong>Prep Time:</strong> ${recipe.prep_time} minutes</p>
+        <p><strong>Cook Time:</strong> ${recipe.cook_time} minutes</p>
+        <p><strong>Serving Size:</strong> ${recipe.serving_size}</p>
+        <p><strong>Cuisine:</strong> ${recipe.cuisine}</p>
+        <p><strong>Difficulty:</strong> ${recipe.difficulty}</p>
+        <p><strong>Ingredients:</strong> ${recipe.ingredients}</p>
+        <p><strong>Instructions:</strong> ${recipe.instructions}</p>
+      `;
+      recipesContainer.appendChild(recipeDiv);
+    }
+  });
+}
+
+document.getElementById("mealType").addEventListener("change", function() {
+  fetchRecipes();
+});
+
+document.getElementById("rating").addEventListener("change", function() {
+  fetchRecipes();
+});
+
+document.getElementById("prepTime").addEventListener("input", function() {
+  fetchRecipes();
+});
+
+document.getElementById("cookTime").addEventListener("input", function() {
+  fetchRecipes();
+});
+
+document.getElementById("servingSize").addEventListener("input", function() {
+  fetchRecipes();
+});
+
+document.getElementById("cuisine").addEventListener("input", function() {
+  fetchRecipes();
+});
+
+document.getElementById("difficulty").addEventListener("change", function() {
+  fetchRecipes();
+});
+
+document.getElementById("submitFeedback").addEventListener("click", function() {
+  const feedbackText = document.getElementById("feedbackText").value;
+  if (feedbackText.trim() === "") {
+    alert("Please enter your feedback");
+    return;
+  }
+  // Send feedback to server or perform other actions
+  alert("Feedback submitted successfully");
+});
+
+  </script>
+</body>
+</html>
